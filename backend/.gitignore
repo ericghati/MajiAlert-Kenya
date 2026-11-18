@@ -9,3 +9,6 @@ __pycache__/
 
 # Local settings / secrets
 .env
+
+# The app handoff notes live outside the repo (shared with the app developer directly)
+HANDOFF.md

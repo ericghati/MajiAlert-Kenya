@@ -1,6 +1,6 @@
 """
 Unit test for the backend's dekad rule (the same rule as the ML repo's
-pipeline/dekad.py and the one written out in HANDOFF.md for the app).
+pipeline/dekad.py and the one written out in the app handoff notes for Eric).
 Run from the backend folder:
 
     python -m unittest tests.test_dekad -v

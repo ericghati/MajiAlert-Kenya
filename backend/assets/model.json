@@ -1,6 +1,6 @@
 {
  "version": 1,
- "source": "SemProject_MLEngine@45d0875",
+ "source": "SemProject_MLEngine@237e724",
  "exported": "2026-11-18",
  "unit": "county",
  "trained_on": "2002-2019",
@@ -190,12 +190,13 @@
    "season_sin": "sin(2*pi*dekad/36)",
    "season_cos": "cos(2*pi*dekad/36)"
   },
-  "ratio_of_means": {
-   "rfq": "100 * rfh / normals[county].rfh_avg[dekad-1]",
-   "rfq_lag1": "100 * rfh_lag1 / normals[county].rfh_avg[previous dekad-1] (previous of dekad 1 is dekad 36)",
-   "r1q": "100 * r1h / normals[county].r1h_avg[dekad-1]",
-   "r3q": "100 * r3h / normals[county].r3h_avg[dekad-1]",
-   "caveat": "The model was trained on the average of each sub-county's ratio; the app divides the county's mean rain by the county's mean normal. Mean difference vs training: rfq 12, r1q 4, r3q 1 points."
+  "percent_of_normal": {
+   "rule": "100 * (x + 5) / (normal + 5), the training definition (5 mm added to both)",
+   "rfq": "100 * (rfh + 5) / (normals[county].rfh_avg[dekad-1] + 5)",
+   "rfq_lag1": "100 * (rfh_lag1 + 5) / (normals[county].rfh_avg[previous dekad-1] + 5) (previous of dekad 1 is dekad 36)",
+   "r1q": "100 * (r1h + 5) / (normals[county].r1h_avg[dekad-1] + 5)",
+   "r3q": "100 * (r3h + 5) / (normals[county].r3h_avg[dekad-1] + 5)",
+   "caveat": "The training value is the average over the county's sampled sub-counties of each sub-county's percentage; the app computes the percentage from the county's mean rain and mean normal. Mean absolute difference vs training: rfq 0.5, rfq_lag1 0.5, r1q 0.4, r3q 0.3 points."
   },
   "approximated": {
    "rfh_max": "set equal to rfh",
@@ -203,7 +204,7 @@
    "r1q_max": "set equal to r1q",
    "r3q_max": "set equal to r3q",
    "nat_frac_anom": "taken from the slider (0 = nowhere in Kenya well above normal, 1 = everywhere)",
-   "caveat": "The _max features are the wettest sub-county; the app has only one county value. Tested on 30,456 training-year county dekads: mean probability difference 0.008, and the alert decision at the threshold differs on 0.52% of rows."
+   "caveat": "The _max features are the wettest sub-county; the app has only one county value. Tested on 30,456 training-year county dekads (slider set to the true value): mean probability difference 0.005, 95th percentile 0.020; the high / not-high decision at the threshold differs on 0.31% of rows."
   }
  },
  "calibration": {

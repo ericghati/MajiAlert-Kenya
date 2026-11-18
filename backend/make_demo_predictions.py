@@ -108,10 +108,12 @@ def rain_needed(row, model, dekad):
     """
     names = model["features"]
     n = model["normals"][row.county]
-    pct = {  # +1 mm of rain = this many extra % of normal
-        "rfq": 100 / n["rfh_avg"][dekad - 1],
-        "r1q": 100 / n["r1h_avg"][dekad - 1],
-        "r3q": 100 / n["r3h_avg"][dekad - 1],
+    # "Percent of normal" is the training definition 100 * (x + 5) / (normal + 5)
+    # (5 mm added to both), so +1 mm of rain adds 100 / (normal + 5) points.
+    pct = {
+        "rfq": 100 / (n["rfh_avg"][dekad - 1] + 5),
+        "r1q": 100 / (n["r1h_avg"][dekad - 1] + 5),
+        "r3q": 100 / (n["r3h_avg"][dekad - 1] + 5),
     }
 
     def prob_with(extra):
@@ -170,7 +172,7 @@ def main():
     # Calibrated chance: look the raw number up in the saved table
     # (linear interpolation, clipped at both ends). We store it UNROUNDED;
     # the app applies the display rule (nearest 5%, under 2.5% shown as
-    # "under 5%"), see HANDOFF.md.
+    # "under 5%"); this rule is written in the app handoff notes given to Eric.
     cal = model["calibration"]
     day["chance"] = np.interp(day.prob, cal["x"], cal["y"])
 
