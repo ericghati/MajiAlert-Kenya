@@ -115,7 +115,7 @@ def main():
             db.collection("counties").document(code),
             {
                 "riskBand": band,
-                "chance": r["chance"],  # calibrated; the raw prob is never stored
+                "chance": r["chance"],  # calibrated, NOT rounded (the app rounds it); raw prob never stored
                 "reasons": r["reasons"],
                 "rainNeededMm": r["rain_needed_mm"],  # None if already high
                 "source": "model",

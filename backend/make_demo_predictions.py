@@ -16,8 +16,8 @@ Output columns (what publish_predictions.py expects):
   prob            the model's raw number. Kept for debugging ONLY: the app
                   must never show it to users.
   chance          calibrated chance of flooding (0..1): the real flood rate
-                  seen for counties with this raw number, rounded to the
-                  nearest 5% (0 means "under 5%")
+                  seen for counties with this raw number. NOT rounded: the
+                  app rounds it for display (nearest 5%)
   rain_needed_mm  the 10-day rain (mm) that would lift the county to the
                   "high" threshold; empty if it is already high
   reasons         JSON list of exactly 3 plain sentences: why the risk is
@@ -81,8 +81,9 @@ SENTENCES = {
 
 
 def dekad_of_year(date):
-    """1..36, same formula as the ML repo."""
-    return (date.month - 1) * 3 + min(date.day // 10, 2) + 1
+    """1..36. Days 1-10 are the 1st dekad of the month, 11-20 the 2nd, 21-end
+    the 3rd. Same rule as the ML repo's pipeline/dekad.py (tests/test_dekad.py)."""
+    return (date.month - 1) * 3 + min((date.day - 1) // 10, 2) + 1
 
 
 def prob_of(x, model):
@@ -167,13 +168,11 @@ def main():
     day["prob"] = 1 / (1 + np.exp(-logit))  # logit -> probability 0..1
 
     # Calibrated chance: look the raw number up in the saved table
-    # (linear interpolation, clipped at both ends), then round to the
-    # nearest 5% so we never show more precision than the data supports.
-    # (Under 2.5% rounds to 0: the app should show that as "under 5%".)
+    # (linear interpolation, clipped at both ends). We store it UNROUNDED;
+    # the app applies the display rule (nearest 5%, under 2.5% shown as
+    # "under 5%"), see HANDOFF.md.
     cal = model["calibration"]
-    step = cal["display_rounding"]  # 0.05
-    chance = np.interp(day.prob, cal["x"], cal["y"])
-    day["chance"] = np.minimum(1.0, np.floor(chance / step + 0.5) * step).round(2)
+    day["chance"] = np.interp(day.prob, cal["x"], cal["y"])
 
     # Group pushes: sum the features of each group (positive = raises risk).
     push = pd.DataFrame(push, columns=names, index=day.index)
@@ -217,7 +216,7 @@ def main():
             "county_code": r.county,
             "risk_band": band,
             "prob": round(float(prob), 4),
-            "chance": round(float(r.chance), 2),
+            "chance": float(r.chance),  # unrounded
             "rain_needed_mm": "" if needed is None else needed,
             "reasons": json.dumps(reasons),
             "as_of": a.date,

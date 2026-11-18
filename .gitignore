@@ -15,7 +15,8 @@
 local.properties
 
 # Secrets / local config
-google-services.json
+# (app/google-services.json is committed on purpose so teammates can build;
+# it only holds the restricted Firebase client key, never an admin key)
 *.env
 .env
 *service-account*.json

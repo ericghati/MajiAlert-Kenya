@@ -1,6 +1,6 @@
 {
  "version": 1,
- "source": "SemProject_MLEngine@4968e13",
+ "source": "SemProject_MLEngine@45d0875",
  "exported": "2026-11-18",
  "unit": "county",
  "trained_on": "2002-2019",
@@ -111,7 +111,77 @@
    "nat_frac_anom"
   ]
  },
- "dekad_of_year": "1..36 = (month-1)*3 + (day//10, max 2) + 1; list index = dekad-1",
+ "dekad_of_year": "1..36 = (month-1)*3 + part, where part = 1 for days 1-10, 2 for days 11-20, 3 for day 21 to the end of the month (part = min((day-1)//10, 2) + 1); list index = dekad-1",
+ "training_range": {
+  "rfh": {
+   "min": 0.0012048193,
+   "max": 403.6
+  },
+  "rfh_avg": {
+   "min": 0.0017269077,
+   "max": 131.64333
+  },
+  "rfq": {
+   "min": 10.224658,
+   "max": 591.0547
+  },
+  "r1h": {
+   "min": 0.17590362,
+   "max": 698.2109633333333
+  },
+  "r3h": {
+   "min": 2.139759,
+   "max": 1364.9088
+  },
+  "r1q": {
+   "min": 15.307993,
+   "max": 466.72345
+  },
+  "r3q": {
+   "min": 22.055058,
+   "max": 410.373
+  },
+  "rfh_lag1": {
+   "min": 0.0012048193,
+   "max": 403.6
+  },
+  "rfh_lag2": {
+   "min": 0.0012048193,
+   "max": 403.6
+  },
+  "rfq_lag1": {
+   "min": 10.224658,
+   "max": 591.0547
+  },
+  "rfh_max": {
+   "min": 0.0012048193,
+   "max": 403.6
+  },
+  "rfq_max": {
+   "min": 10.224658,
+   "max": 613.42065
+  },
+  "r1q_max": {
+   "min": 15.536705,
+   "max": 466.72345
+  },
+  "r3q_max": {
+   "min": 22.055058,
+   "max": 410.373
+  },
+  "season_sin": {
+   "min": -1.0,
+   "max": 1.0
+  },
+  "season_cos": {
+   "min": -1.0,
+   "max": 1.0
+  },
+  "nat_frac_anom": {
+   "min": 0.0,
+   "max": 0.9041095890410958
+  }
+ },
  "app_notes": {
   "inputs": "county, dekad (1..36), rfh, rfh_lag1, rfh_lag2 (mm per 10 days, newest first), r3h (mm over 3 months), widespread slider 0..1",
   "exact": {
