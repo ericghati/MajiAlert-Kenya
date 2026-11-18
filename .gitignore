@@ -13,3 +13,16 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Secrets / local config
+google-services.json
+*.env
+.env
+*service-account*.json
+*firebase-adminsdk*.json
+
+# Python backend
+backend/venv/
+venv/
+__pycache__/
+*.pyc
