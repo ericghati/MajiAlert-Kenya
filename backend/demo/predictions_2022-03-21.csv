@@ -1,0 +1,48 @@
+county_code,risk_band,prob,reasons,as_of
+KE001,low,0.1873,[],2022-03-21
+KE002,low,0.2197,[],2022-03-21
+KE003,low,0.2237,[],2022-03-21
+KE004,low,0.1966,[],2022-03-21
+KE005,low,0.2055,[],2022-03-21
+KE006,low,0.2237,[],2022-03-21
+KE007,low,0.215,[],2022-03-21
+KE008,low,0.2415,[],2022-03-21
+KE009,low,0.2407,[],2022-03-21
+KE010,low,0.2731,[],2022-03-21
+KE011,low,0.2263,[],2022-03-21
+KE012,low,0.2521,[],2022-03-21
+KE013,low,0.246,[],2022-03-21
+KE014,low,0.264,[],2022-03-21
+KE015,low,0.1982,[],2022-03-21
+KE016,low,0.2423,[],2022-03-21
+KE017,low,0.2021,[],2022-03-21
+KE018,low,0.2909,[],2022-03-21
+KE019,low,0.2897,[],2022-03-21
+KE020,low,0.2662,[],2022-03-21
+KE021,low,0.2708,[],2022-03-21
+KE022,low,0.2515,[],2022-03-21
+KE023,low,0.2735,[],2022-03-21
+KE024,low,0.2775,[],2022-03-21
+KE025,low,0.2604,[],2022-03-21
+KE026,low,0.384,[],2022-03-21
+KE027,low,0.3547,[],2022-03-21
+KE028,low,0.3353,[],2022-03-21
+KE029,low,0.4884,[],2022-03-21
+KE030,low,0.3174,[],2022-03-21
+KE031,low,0.2673,[],2022-03-21
+KE032,low,0.3396,[],2022-03-21
+KE033,elevated,0.5211,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 152% of normal (444 mm)."", ""Rain over the last 10 days was 95% of normal (53 mm).""]",2022-03-21
+KE034,low,0.2427,[],2022-03-21
+KE035,elevated,0.5072,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 151% of normal (401 mm)."", ""Rain over the last 10 days was 171% of normal (100 mm).""]",2022-03-21
+KE036,elevated,0.5374,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 178% of normal (559 mm)."", ""Rain over the last 10 days was 140% of normal (88 mm).""]",2022-03-21
+KE037,elevated,0.5459,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 139% of normal (391 mm)."", ""Rain over the last 10 days was 182% of normal (121 mm).""]",2022-03-21
+KE038,elevated,0.5787,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 170% of normal (577 mm)."", ""Rain over the last 10 days was 200% of normal (157 mm).""]",2022-03-21
+KE039,low,0.4777,[],2022-03-21
+KE040,elevated,0.5686,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 156% of normal (443 mm)."", ""Rain over the last 10 days was 191% of normal (129 mm).""]",2022-03-21
+KE041,elevated,0.6016,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 174% of normal (465 mm)."", ""Rain over the last 10 days was 190% of normal (122 mm).""]",2022-03-21
+KE042,elevated,0.57,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 165% of normal (515 mm)."", ""Rain over the last 10 days was 204% of normal (142 mm).""]",2022-03-21
+KE043,elevated,0.5904,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 179% of normal (487 mm)."", ""Rain over the last 10 days was 169% of normal (108 mm).""]",2022-03-21
+KE044,elevated,0.5728,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 171% of normal (516 mm)."", ""Rain over the last 10 days was 146% of normal (98 mm).""]",2022-03-21
+KE045,elevated,0.5877,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 190% of normal (657 mm)."", ""Rain over the last 10 days was 166% of normal (127 mm).""]",2022-03-21
+KE046,elevated,0.5917,"[""This time of year is when floods are more likely in this county."", ""Rain over the past 3 months was 185% of normal (621 mm)."", ""Rain over the last 10 days was 195% of normal (141 mm).""]",2022-03-21
+KE047,low,0.2539,[],2022-03-21
