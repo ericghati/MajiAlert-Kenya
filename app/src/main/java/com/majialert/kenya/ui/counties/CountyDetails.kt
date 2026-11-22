@@ -9,6 +9,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.majialert.kenya.data.model.County
+import androidx.compose.runtime.*
+import com.majialert.kenya.data.repository.CountyRepository
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+
+
+
+private fun formatFirestoreDate(value: Any?): String {
+    if (value !is Timestamp) {
+        return "Not available"
+    }
+
+    val formatter = SimpleDateFormat(
+        "dd MMM yyyy, HH:mm 'UTC'",
+        Locale.ENGLISH
+    )
+
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+
+    return formatter.format(value.toDate())
+}
 
 
 @Composable
@@ -16,6 +39,65 @@ fun CountyDetailsScreen(
     county: County,
     onBack: () -> Unit
 ) {
+
+
+
+    var countyData by remember(county.code) {
+        mutableStateOf<Map<String, Any?>?>(null)
+    }
+
+    var isLoading by remember(county.code) {
+        mutableStateOf(true)
+    }
+
+    var errorMessage by remember(county.code) {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(county.code) {
+        isLoading = true
+        countyData = null
+        errorMessage = null
+
+        CountyRepository.getCountyRisk(
+            countyCode = county.code,
+            onSuccess = { data ->
+                countyData = data
+                isLoading = false
+            },
+            onError = { error ->
+                errorMessage = error.message
+                    ?: "Unable to retrieve county data"
+                isLoading = false
+            }
+        )
+    }
+
+
+    val riskBand = countyData
+        ?.get("riskBand")
+        ?.toString()
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.replaceFirstChar { it.uppercase() }
+        ?: "Not Available"
+
+    val chance = (countyData?.get("chance") as? Number)
+        ?.toDouble()
+
+    val source = countyData?.get("source")
+        ?.toString()
+        ?: "Not Available"
+
+    val asOf = formatFirestoreDate(
+        countyData?.get("asOf")
+    )
+
+    val updatedAt = formatFirestoreDate(
+        countyData?.get("updatedAt")
+    )
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -34,6 +116,19 @@ fun CountyDetailsScreen(
 
         Text("County code: ${county.code}")
 
+        Text(
+            text = when {
+                isLoading -> "Firestore: Loading..."
+                errorMessage != null ->
+                    "Firestore error: $errorMessage"
+                countyData == null ->
+                    "Firestore: No document found"
+                else ->
+                    "Firestore fields: ${countyData?.keys?.joinToString()}"
+            },
+            style = MaterialTheme.typography.bodySmall
+        )
+
         ElevatedCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -46,17 +141,37 @@ fun CountyDetailsScreen(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                Text(
-                    "Not Available",
-                    style = MaterialTheme.typography.headlineSmall
-                )
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator()
+                        Text("Loading flood-risk information...")
+                    }
 
-                Text(
-                    "Current flood-risk information " +
-                            "has not been loaded for this county."
-                )
+                    errorMessage != null -> {
+                        Text("Unable to load flood-risk data")
+                        Text(errorMessage ?: "Unknown error")
+                    }
+
+                    countyData == null -> {
+                        Text("No flood-risk data available")
+                    }
+
+                    else -> {
+                        Text(
+                            riskBand,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+
+                        Text(
+                            "Reported category from the " +
+                                    "connected data source."
+                        )
+                    }
+                }
             }
         }
+
+
 
         OutlinedCard(
             modifier = Modifier.fillMaxWidth()
@@ -70,11 +185,35 @@ fun CountyDetailsScreen(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                Text("Data source: Pending")
-                Text("Last updated: Not available")
-                Text("Flood probability: Not available")
+                if (isLoading) {
+                    Text("Loading information...")
+                } else if (errorMessage != null || countyData == null) {
+                    Text("Monitoring information unavailable")
+                } else {
+                    Text("Source: $source")
+                    Text("Prediction date: $asOf")
+                    Text("Record updated: $updatedAt")
+
+                    if (chance != null) {
+                        Text(
+                            "Stored probability value: $chance"
+                        )
+                    }
+
+                    Text(
+                        "Risk categories may be model-generated " +
+                                "and should not be treated as official " +
+                                "emergency alerts."
+                    )
+
+                    Text(
+                        "Historical model prediction — not a live flood alert.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
+
 
         OutlinedCard(
             modifier = Modifier.fillMaxWidth()

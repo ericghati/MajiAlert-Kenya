@@ -79,6 +79,7 @@ fun AppNavigation() {
 
                     AppDestination.Home -> HomeScreen(
                         countyName = selectedCounty.name,
+                        countyCode = selectedCounty.code,
                         onNavigateToMap = {
                             selectedIndex = 1
                         },

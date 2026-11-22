@@ -8,13 +8,59 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.*
+import com.majialert.kenya.data.repository.CountyRepository
 
 @Composable
 fun HomeScreen(
     countyName: String = "Nairobi",
+    countyCode: String = "KE047",
     onNavigateToMap: () -> Unit = {},
     onNavigateToCounties: () -> Unit = {}
-) {
+
+)
+
+{
+
+    var riskData by remember(countyCode) {
+        mutableStateOf<Map<String, Any?>?>(null)
+    }
+
+    var isLoading by remember(countyCode) {
+        mutableStateOf(true)
+    }
+
+    var errorMessage by remember(countyCode) {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(countyCode) {
+        isLoading = true
+        riskData = null
+        errorMessage = null
+
+        CountyRepository.getCountyRisk(
+            countyCode = countyCode,
+            onSuccess = { data ->
+                riskData = data
+                isLoading = false
+            },
+            onError = { error ->
+                errorMessage = error.message ?: "Connection failed"
+                isLoading = false
+            }
+        )
+    }
+
+    val riskBand = riskData?.get("riskBand")
+        ?.toString()
+        ?.replaceFirstChar { it.uppercase() }
+        ?: "Not Available"
+
+    val source = riskData?.get("source")
+        ?.toString()
+        ?: "Not Available"
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,9 +98,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.headlineSmall
                 )
 
-                Text(
-                    "Demonstration selection"
-                )
+                Text("Selected from Kenya's 47 counties")
 
                 OutlinedButton(
                     onClick = onNavigateToCounties
@@ -65,6 +109,7 @@ fun HomeScreen(
         }
 
         // Flood risk information
+
         ElevatedCard(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -77,22 +122,39 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                Text(
-                    "Not Available",
-                    style = MaterialTheme.typography.headlineSmall
-                )
+                when {
+                    isLoading -> {
+                        CircularProgressIndicator()
+                        Text("Loading county risk...")
+                    }
 
-                Text(
-                    "Live flood-risk information has not " +
-                            "been connected yet."
-                )
+                    errorMessage != null -> {
+                        Text("Unable to load risk data")
+                        Text(errorMessage ?: "Unknown error")
+                    }
 
-                Text(
-                    "Data source: Pending",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                    riskData == null -> {
+                        Text("No risk data available")
+                    }
+
+                    else -> {
+                        Text(
+                            riskBand,
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+
+                        Text("Source: $source")
+
+                        Text(
+                            "Historical/model data. " +
+                                    "Not a verified live flood warning.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
             }
         }
+
 
         // Recent alerts
         Text(
@@ -111,8 +173,8 @@ fun HomeScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    "Alerts will appear here once " +
-                            "the backend is connected."
+                    "Live alerts have not been loaded. " +
+                            "Check official emergency updates for current warnings."
                 )
             }
         }
