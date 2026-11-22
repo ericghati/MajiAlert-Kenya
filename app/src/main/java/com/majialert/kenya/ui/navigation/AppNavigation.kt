@@ -88,7 +88,9 @@ fun AppNavigation() {
                         }
                     )
 
-                    AppDestination.Map -> MapScreen()
+                    AppDestination.Map -> MapScreen(
+                        alerts = emptyList()
+                    )
 
                     AppDestination.Counties -> CountiesScreen(
                         selectedCountyCode = selectedCountyCode,
