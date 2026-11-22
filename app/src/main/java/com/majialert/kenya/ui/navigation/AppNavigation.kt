@@ -16,6 +16,9 @@ import com.majialert.kenya.maps.MapScreen
 import com.majialert.kenya.ui.counties.CountiesScreen
 import com.majialert.kenya.ui.home.HomeScreen
 import com.majialert.kenya.ui.safety.SafetyScreen
+import com.majialert.kenya.data.model.CountyData
+import androidx.compose.runtime.mutableStateOf
+import com.majialert.kenya.ui.counties.CountyDetailsScreen
 
 private enum class AppDestination(val label: String) {
     Home("Home"),
@@ -27,6 +30,18 @@ private enum class AppDestination(val label: String) {
 @Composable
 fun AppNavigation() {
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
+
+    var selectedCountyCode by rememberSaveable {
+        mutableStateOf("KE047")
+    }
+
+    var showCountyDetails by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val selectedCounty = CountyData.counties.first {
+        it.code == selectedCountyCode
+    }
     val destinations = AppDestination.values()
 
     Scaffold(
@@ -35,7 +50,10 @@ fun AppNavigation() {
                 destinations.forEachIndexed { index, destination ->
                     NavigationBarItem(
                         selected = selectedIndex == index,
-                        onClick = { selectedIndex = index },
+                        onClick = {
+                            selectedIndex = index
+                            showCountyDetails = false
+                        },
                         icon = { Text(destination.label.take(1)) },
                         label = { Text(destination.label) }
                     )
@@ -44,12 +62,45 @@ fun AppNavigation() {
         }
     ) { contentPadding ->
         Box(modifier = Modifier.padding(contentPadding)) {
-            when (destinations[selectedIndex]) {
-                AppDestination.Home -> HomeScreen()
-                AppDestination.Map -> MapScreen()
-                AppDestination.Counties -> CountiesScreen()
-                AppDestination.Safety -> SafetyScreen()
+
+            if (showCountyDetails) {
+
+                CountyDetailsScreen(
+                    county = selectedCounty,
+                    onBack = {
+                        showCountyDetails = false
+                        selectedIndex = 2
+                    }
+                )
+
+            } else {
+
+                when (destinations[selectedIndex]) {
+
+                    AppDestination.Home -> HomeScreen(
+                        countyName = selectedCounty.name,
+                        onNavigateToMap = {
+                            selectedIndex = 1
+                        },
+                        onNavigateToCounties = {
+                            selectedIndex = 2
+                        }
+                    )
+
+                    AppDestination.Map -> MapScreen()
+
+                    AppDestination.Counties -> CountiesScreen(
+                        selectedCountyCode = selectedCountyCode,
+                        onCountySelected = { county ->
+                            selectedCountyCode = county.code
+                            showCountyDetails = true
+                        }
+                    )
+
+                    AppDestination.Safety -> SafetyScreen()
+                }
             }
+
         }
     }
 }
