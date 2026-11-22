@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Secrets / local config
+# (app/google-services.json is committed on purpose so teammates can build;
+# it only holds the restricted Firebase client key, never an admin key)
+*.env
+.env
+*service-account*.json
+*firebase-adminsdk*.json
+
+# Python backend
+backend/venv/
+venv/
+__pycache__/
+*.pyc

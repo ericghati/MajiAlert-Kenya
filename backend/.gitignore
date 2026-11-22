@@ -1,0 +1,14 @@
+# The Firebase admin key: gives full write access to the project. NEVER commit.
+serviceAccountKey.json
+
+# Python virtual environment (each person makes their own)
+venv/
+
+# Python's compiled cache files
+__pycache__/
+
+# Local settings / secrets
+.env
+
+# The app handoff notes live outside the repo (shared with the app developer directly)
+HANDOFF.md
