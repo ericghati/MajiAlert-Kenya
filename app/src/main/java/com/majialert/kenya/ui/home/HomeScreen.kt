@@ -1,15 +1,19 @@
-
 package com.majialert.kenya.ui.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.*
+import com.google.firebase.Timestamp
+import com.majialert.kenya.data.model.FloodAlert
+import com.majialert.kenya.data.repository.AlertRepository
 import com.majialert.kenya.data.repository.CountyRepository
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun HomeScreen(
@@ -24,6 +28,37 @@ fun HomeScreen(
 
     var riskData by remember(countyCode) {
         mutableStateOf<Map<String, Any?>?>(null)
+    }
+
+
+    var alerts by remember {
+        mutableStateOf<List<FloodAlert>>(emptyList())
+    }
+
+    var alertsLoading by remember {
+        mutableStateOf(true)
+    }
+
+    var alertsError by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    DisposableEffect(Unit) {
+        val listener = AlertRepository.observeActiveAlerts(
+            onSuccess = { result ->
+                alerts = result
+                alertsError = null
+                alertsLoading = false
+            },
+            onError = { error ->
+                alertsError = error.message ?: "Unable to load alerts"
+                alertsLoading = false
+            }
+        )
+
+        onDispose {
+            listener.remove()
+        }
     }
 
     var isLoading by remember(countyCode) {
@@ -145,6 +180,14 @@ fun HomeScreen(
 
                         Text("Source: $source")
 
+                        val predictionDate = riskData?.get("asOf") as? Timestamp
+
+                        Text(
+                            text = "Model prediction date: " +
+                                    formatAlertDate(predictionDate),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+
                         Text(
                             "Historical/model data. " +
                                     "Not a verified live flood warning.",
@@ -157,25 +200,135 @@ fun HomeScreen(
 
 
         // Recent alerts
+        // Historical flood alerts
         Text(
-            "Recent Flood Alerts",
+            text = "Historical Flood Risk Alerts",
             style = MaterialTheme.typography.titleLarge
         )
 
-        OutlinedCard(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text("No live alerts loaded")
+        Text(
+            text = "Demo data from a historical model replay. " +
+                    "These are not current flood warnings.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
-                Spacer(Modifier.height(8.dp))
+        when {
+            alertsLoading -> {
+                CircularProgressIndicator()
+                Text("Loading flood risk alerts...")
+            }
 
+            alertsError != null -> {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Unable to load alerts: $alertsError",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
+            alerts.isEmpty() -> {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "No active alerts in the demo dataset.",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
+            else -> {
                 Text(
-                    "Live alerts have not been loaded. " +
-                            "Check official emergency updates for current warnings."
+                    text = "${alerts.size} active alerts in historical replay",
+                    style = MaterialTheme.typography.bodyMedium
                 )
+
+                // Display alerts for the currently selected county
+                val countyAlerts = alerts.filter {
+                    it.county == countyCode
+                }
+
+                if (countyAlerts.isEmpty()) {
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "No model alerts recorded for $countyName.",
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    countyAlerts.forEach { alert ->
+
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = countyName,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                Text(
+                                    text = "Risk severity: " +
+                                            alert.severity.replaceFirstChar {
+                                                it.uppercase()
+                                            },
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+
+                                Text(
+                                    text = alert.message,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Text(
+                                    text = "Alert issued: " +
+                                            formatAlertDate(alert.issuedAt),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                if (alert.reasons.isNotEmpty()) {
+                                    Text(
+                                        text = "Model reasoning:",
+                                        style = MaterialTheme.typography.titleSmall
+                                    )
+
+                                    alert.reasons.forEach { reason ->
+                                        Text(
+                                            text = "• $reason",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                }
+
+                                HorizontalDivider()
+
+                                Text(
+                                    text = if (alert.source.equals(
+                                            "model",
+                                            ignoreCase = true
+                                        )
+                                    ) {
+                                        "A model estimate, not an official forecast."
+                                    } else {
+                                        "Historical source: ${alert.source}. " +
+                                                "Not a verified current warning."
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -209,4 +362,16 @@ fun HomeScreen(
             style = MaterialTheme.typography.bodySmall
         )
     }
+}
+
+private fun formatAlertDate(timestamp: Timestamp?): String {
+    if (timestamp == null) return "Date unavailable"
+
+    val formatter = SimpleDateFormat(
+        "dd MMM yyyy",
+        Locale.ENGLISH
+    )
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+
+    return formatter.format(timestamp.toDate())
 }

@@ -23,7 +23,10 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
-
+import com.majialert.kenya.data.repository.MapRiskRepository
+import com.majialert.kenya.data.repository.MapCountyRisk
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 private val KENYA_CENTRE = LatLng(0.2, 37.9)
 
 private fun Severity.color(): Color = when (this) {
@@ -31,6 +34,15 @@ private fun Severity.color(): Color = when (this) {
     Severity.MODERATE -> Color(0xFFF57C00)
     Severity.HIGH -> Color(0xFFD32F2F)
     Severity.SEVERE -> Color(0xFF7B1FA2)
+}
+
+private fun riskBandColor(riskBand: String): Color {
+    return when (riskBand.lowercase()) {
+        "high" -> Color(0xFFD32F2F)
+        "elevated" -> Color(0xFFF57C00)
+        "low" -> Color(0xFF388E3C)
+        else -> Color.Gray
+    }
 }
 
 /**
@@ -44,6 +56,32 @@ fun MapScreen(alerts: List<FloodAlert>, focusCountyId: Int? = null) {
     val context = LocalContext.current
     val cameraState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(KENYA_CENTRE, 5.7f)
+    }
+
+    var countyRisks by remember {
+        mutableStateOf<List<MapCountyRisk>>(emptyList())
+    }
+
+    var riskLoading by remember {
+        mutableStateOf(true)
+    }
+
+    var riskError by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(Unit) {
+        MapRiskRepository.getAllCountyRisks(
+            onSuccess = { risks ->
+                countyRisks = risks
+                riskLoading = false
+                riskError = null
+            },
+            onError = { error ->
+                riskError = error.message ?: "Unable to load risk data"
+                riskLoading = false
+            }
+        )
     }
 
     // ----- Permissions -----
@@ -95,44 +133,68 @@ fun MapScreen(alerts: List<FloodAlert>, focusCountyId: Int? = null) {
     }
 
     var selectedSite by remember { mutableStateOf<FloodSite?>(null) }
-    val activeAlerts = remember(alerts) { alerts.filter { it.isActive } }
 
     Box(Modifier.fillMaxSize()) {
+
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraState,
-            properties = MapProperties(isMyLocationEnabled = hasPermission),
-            uiSettings = MapUiSettings(
-                zoomControlsEnabled = true,
-                zoomGesturesEnabled = true,
-                myLocationButtonEnabled = hasPermission
-            ),
-            onMapClick = { selectedSite = null }
+            // Keep your existing map settings here
         ) {
-            // Flood-prone site markers
+            // Flood-prone markers
             floodProneSites.forEach { site ->
                 Marker(
-                    state = rememberMarkerState(key = site.name, position = LatLng(site.lat, site.lng)),
-                    title = site.name,
-                    snippet = site.county,
-                    onClick = { selectedSite = site; false }
+                    // Keep your existing marker code
                 )
             }
-            // Active warnings drawn as coloured circles over the affected county
-            activeAlerts.forEach { alert ->
-                counties.firstOrNull { it.id == alert.countyId }?.let { c ->
+
+            // County risk circles: ONLY HERE
+            countyRisks.forEach { risk ->
+                val countyNumber = risk.countyCode
+                    .removePrefix("KE")
+                    .toIntOrNull()
+
+                val county = counties.firstOrNull {
+                    it.id == countyNumber
+                }
+
+                if (county != null) {
                     Circle(
-                        center = LatLng(c.lat, c.lng),
-                        radius = 25_000.0,
-                        fillColor = alert.severity.color().copy(alpha = 0.35f),
-                        strokeColor = alert.severity.color(),
-                        strokeWidth = 3f
+                        center = LatLng(county.lat, county.lng),
+                        radius = 20_000.0,
+                        fillColor = riskBandColor(risk.riskBand)
+                            .copy(alpha = 0.25f),
+                        strokeColor = riskBandColor(risk.riskBand),
+                        strokeWidth = 2f
                     )
                 }
             }
-        }
+        } // GoogleMap ends here // GoogleMap ends here
+
+// Search bar and bottom information panels go AFTER this brace
+
 
         // Search bar + dropdown
+
+        if (riskLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+            )
+        }
+
+        if (riskError != null) {
+            Text(
+                text = "Unable to load county risk estimates",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp)
+            )
+        }
+
+
         Column(Modifier.align(Alignment.TopCenter).padding(12.dp)) {
             OutlinedTextField(
                 value = query,
@@ -168,6 +230,78 @@ fun MapScreen(alerts: List<FloodAlert>, focusCountyId: Int? = null) {
 
         // Bottom info: site details, else nearest-county hint
         Column(Modifier.align(Alignment.BottomCenter).padding(12.dp)) {
+
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        "Historical Flood Risk",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        listOf(
+                            "Low" to Color(0xFF388E3C),
+                            "Elevated" to Color(0xFFF57C00),
+                            "High" to Color(0xFFD32F2F)
+                        ).forEach { (label, color) ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(10.dp)
+                                        .background(color, CircleShape)
+                                )
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        "Model estimates, not official or live flood warnings.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+
+                    val predictionDate = countyRisks
+                        .mapNotNull { it.asOf }
+                        .maxOrNull()
+
+                    if (predictionDate != null) {
+                        val formattedDate = remember(predictionDate) {
+                            java.text.SimpleDateFormat(
+                                "dd MMM yyyy",
+                                java.util.Locale.getDefault()
+                            ).format(predictionDate.toDate())
+                        }
+
+                        Text(
+                            text = "Latest prediction date: $formattedDate",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+
+                }
+            }
+
+
             selectedSite?.let { s ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
@@ -177,13 +311,8 @@ fun MapScreen(alerts: List<FloodAlert>, focusCountyId: Int? = null) {
                         Text(s.history)
                     }
                 }
-            } ?: nearestCounty?.let {
-                val warn = activeAlerts.count { a -> a.countyId == it.id }
-                AssistChip(
-                    onClick = {},
-                    label = { Text("You're near ${it.name} ┬À $warn active warning(s)") }
-                )
-            }
+            } // Historical county risk indicators from Firestore
+
         }
     }
 }
