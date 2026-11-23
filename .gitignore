@@ -27,3 +27,9 @@ backend/venv/
 venv/
 __pycache__/
 *.pyc
+
+# Local Android Studio project settings
+/.idea/*
+!/.idea/.gitignore
+!/.idea/inspectionProfiles/
+!/.idea/inspectionProfiles/Project_Default.xml
