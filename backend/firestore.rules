@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// Firestore security rules for MajiAlert.
+// Paste into: Firebase Console -> Firestore Database -> Rules -> Publish.
+//
+// Idea: the phone app may only READ. Nobody on the internet can write.
+// Our Python backend still writes, because the admin key (serviceAccountKey.json)
+// bypasses these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // County risk status shown on the map.
+    match /counties/{county} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Active flood alerts.
+    match /alerts/{alert} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Optional rain shading data (later).
+    match /subcounties/{sub} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Anything else: no access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
