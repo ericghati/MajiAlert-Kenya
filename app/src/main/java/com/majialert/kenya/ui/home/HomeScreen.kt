@@ -14,6 +14,7 @@ import com.majialert.kenya.data.repository.CountyRepository
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import com.majialert.kenya.data.util.RiskFormatter
 
 @Composable
 fun HomeScreen(
@@ -95,6 +96,11 @@ fun HomeScreen(
     val source = riskData?.get("source")
         ?.toString()
         ?: "Not Available"
+
+    val reasons = (riskData?.get("reasons") as? List<*>)
+        ?.filterIsInstance<String>()
+        ?.filter { it.isNotBlank() }
+        ?: emptyList()
 
     Column(
         modifier = Modifier
@@ -178,6 +184,13 @@ fun HomeScreen(
                             style = MaterialTheme.typography.headlineSmall
                         )
 
+                        val chance = (riskData?.get("chance") as? Number)?.toDouble()
+
+                        Text(
+                            text = "Estimated flood chance: ${RiskFormatter.formatChance(chance)}",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+
                         Text("Source: $source")
 
                         val predictionDate = riskData?.get("asOf") as? Timestamp
@@ -198,6 +211,41 @@ fun HomeScreen(
             }
         }
 
+        OutlinedCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Why this risk level?",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                when {
+                    isLoading -> Text("Loading risk explanations...")
+
+                    errorMessage != null || riskData == null ->
+                        Text("Risk explanations unavailable.")
+
+                    reasons.isEmpty() ->
+                        Text("No model explanation is available for this county.")
+
+                    else -> {
+                        reasons.forEachIndexed { index, reason ->
+                            Text("${index + 1}. $reason")
+                        }
+                    }
+                }
+
+                Text(
+                    text = "Explanations are based on historical model inputs, not live flood monitoring.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         // Recent alerts
         // Historical flood alerts
