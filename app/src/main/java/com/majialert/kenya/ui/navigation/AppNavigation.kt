@@ -19,12 +19,14 @@ import com.majialert.kenya.ui.safety.SafetyScreen
 import com.majialert.kenya.data.model.CountyData
 import androidx.compose.runtime.mutableStateOf
 import com.majialert.kenya.ui.counties.CountyDetailsScreen
+import com.majialert.kenya.ui.rainfall.RainfallCheckerScreen
 
 private enum class AppDestination(val label: String) {
     Home("Home"),
     Map("Map"),
     Counties("Counties"),
-    Safety("Safety")
+    Safety("Safety"),
+    Rainfall("Rainfall")
 }
 
 @Composable
@@ -101,6 +103,9 @@ fun AppNavigation() {
                     )
 
                     AppDestination.Safety -> SafetyScreen()
+
+                    AppDestination.Rainfall -> RainfallCheckerScreen()
+
                 }
             }
 
